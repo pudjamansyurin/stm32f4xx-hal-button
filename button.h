@@ -10,6 +10,9 @@
 
 #include "stm32f4xx_hal.h"
 
+/* Public macros */
+#define DELAY_MS(__X__)        HAL_Delay(__X__)
+
 /* Public types */
 struct ButtonStruct {
   GPIO_TypeDef *port;
