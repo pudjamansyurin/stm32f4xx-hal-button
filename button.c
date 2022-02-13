@@ -107,13 +107,36 @@ HAL_StatusTypeDef BTN_DeInit(struct ButtonStruct *btn)
  */
 GPIO_PinState BTN_GetState(struct ButtonStruct *btn)
 {
-  GPIO_PinState state;
+  return (HAL_GPIO_ReadPin(btn->port, btn->pin));
+}
 
-  __HAL_LOCK(btn);
-  state = HAL_GPIO_ReadPin(btn->port, btn->pin);
-  __HAL_UNLOCK(btn);
+/**
+ * @brief It should be called on all HAL EXTI IRQ lines handler
+ */
+void BTN_IRQHandler(void)
+{
+  uint8_t pin;
 
-  return (state);
+  for (pin = 0; pin < BTN_PIN_CNT; pin++) {
+    if (Listeners[pin] != NULL) {
+      HAL_GPIO_EXTI_IRQHandler(pin);
+    }
+  }
+}
+
+/**
+ * @brief HAL EXTI Interrupt Callback
+ * @param GPIO_Pin The interrupted pin
+ */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  void (*Listener)(void) = Listeners[GPIO_Pin];
+
+  /* Check properties */
+  if (Listener != NULL) {
+    /* Execute callback */
+    Listener();
+  }
 }
 
 /* Private function definitions */
@@ -170,18 +193,4 @@ static inline void PortEnableClock(GPIO_TypeDef *port)
     __HAL_RCC_GPIOB_CLK_ENABLE();
   else if (port == GPIOA)
     __HAL_RCC_GPIOA_CLK_ENABLE();
-}
-
-/* HAL EXTI Interrupt Callback */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  void (*Listener)(void) = Listeners[GPIO_Pin];
-
-  /* Check properties */
-  if (Listener == NULL) {
-    return;
-  }
-
-  /* Execute callback */
-  Listener();
 }

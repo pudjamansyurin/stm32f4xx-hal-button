@@ -29,4 +29,8 @@ HAL_StatusTypeDef BTN_Init(struct ButtonStruct *btn,
 HAL_StatusTypeDef BTN_DeInit(struct ButtonStruct *btn);
 GPIO_PinState BTN_GetState(struct ButtonStruct *btn);
 
+/* Interrupt Request Handler */
+void BTN_IRQHandler(void);
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+
 #endif /* INC_MODULES_BUTTON_H_ */
