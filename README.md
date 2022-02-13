@@ -2,6 +2,7 @@
 
 ## How to use the module
 
+#### **`main.c`**
 ```c
 #include "stm32f4xx-hal-button-module/button.h"
 
@@ -15,11 +16,11 @@ int main(void)
   struct ButtonStruct hbtn1;
   struct ButtonStruct hbtn2;
   
-  /* Initialize the Button for port C13 as Normal mode */
-  BTN_Init(&hbtn1, GPIOC, GPIO_PIN_13, NULL);
+  /* Initialize the Button for port A5 as Normal mode */
+  BTN_Init(&hbtn1, GPIOA, GPIO_PIN_5, NULL);
   
-  /* Initialize the Button for port C14 as EXTI mode */
-  BTN_Init(&hbtn2, GPIOC, GPIO_PIN_14, ButtonCallback);
+  /* Initialize the Button for port C13 as EXTI mode */
+  BTN_Init(&hbtn2, GPIOC, GPIO_PIN_13, ButtonCallback);
   
   /* Super loop */
   while(1) {
@@ -35,4 +36,33 @@ int main(void)
   BTN_DeInit(&hbtn1);
   BTN_DeInit(&hbtn2;
 }
+```
+
+
+#### **`stm32f4xx_it.c`**
+```c
+/* USER CODE BEGIN Includes */
+#include "stm32f4xx-hal-button-module/button.h"
+/* USER CODE END Includes */
+
+/* USER CODE BEGIN EV */
+extern struct ButtonStruct hbtn;
+/* USER CODE END EV */
+
+/* USER CODE BEGIN 1 */
+/**
+  * @brief This function handles EXTI line[15:10] interrupts.
+  */
+void EXTI15_10_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(hbtn.pin);
+}
+/* USER CODE END 1 */
+```
+
+#### **`stm32f4xx_it.h`**
+```c
+/* USER CODE BEGIN EFP */
+void EXTI15_10_IRQHandler(void);
+/* USER CODE END EFP */
 ```
