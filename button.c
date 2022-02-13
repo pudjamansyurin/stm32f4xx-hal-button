@@ -19,13 +19,13 @@ static inline IRQn_Type PinGetIrqNumber(uint16_t pin);
 /**
  * @brief Configures Button GPIO.
  * @note  Ignore cb parameter for normal input mode
- * @param btn Pointer to ButtonStruct handle
+ * @param btn Pointer to Button handle
  * @param port The GPIO port used
  * @param pin The GPIO pin used
  * @param cb The callback for EXTI mode
  * @return HAL Status
  */
-HAL_StatusTypeDef BTN_Init(struct ButtonStruct *btn,
+HAL_StatusTypeDef BTN_Init(struct Button *btn,
                            GPIO_TypeDef *port,
                            uint16_t pin,
                            void (*cb)(void))
@@ -81,10 +81,10 @@ HAL_StatusTypeDef BTN_Init(struct ButtonStruct *btn,
 /**
  * @brief DeInit Buttons.
  * @note Button DeInit does not disable the GPIO clock
- * @param btn Pointer to ButtonStruct handle
+ * @param btn Pointer to Button handle
  * @return HAL Status
  */
-HAL_StatusTypeDef BTN_DeInit(struct ButtonStruct *btn)
+HAL_StatusTypeDef BTN_DeInit(struct Button *btn)
 {
   __HAL_LOCK(btn);
 
@@ -102,10 +102,10 @@ HAL_StatusTypeDef BTN_DeInit(struct ButtonStruct *btn)
 
 /**
  * @brief Returns the selected Button state.
- * @param btn Pointer to ButtonStruct handle
+ * @param btn Pointer to Button handle
  * @return The Button GPIO pin value.
  */
-GPIO_PinState BTN_GetState(struct ButtonStruct *btn)
+GPIO_PinState BTN_GetState(struct Button *btn)
 {
   return (HAL_GPIO_ReadPin(btn->port, btn->pin));
 }

@@ -14,20 +14,20 @@
 #define DELAY_MS(__X__)        HAL_Delay(__X__)
 
 /* Public types */
-struct ButtonStruct {
+struct Button {
   GPIO_TypeDef *port;
   uint16_t pin;
   HAL_LockTypeDef Lock;
-  void (*callback)(struct ButtonStruct*);
+  void (*callback)(struct Button*);
 };
 
 /* Public function declarations */
-HAL_StatusTypeDef BTN_Init(struct ButtonStruct *btn,
+HAL_StatusTypeDef BTN_Init(struct Button *btn,
                            GPIO_TypeDef *port,
                            uint16_t pin,
                            void (*cb)(void));
-HAL_StatusTypeDef BTN_DeInit(struct ButtonStruct *btn);
-GPIO_PinState BTN_GetState(struct ButtonStruct *btn);
+HAL_StatusTypeDef BTN_DeInit(struct Button *btn);
+GPIO_PinState BTN_GetState(struct Button *btn);
 
 /* Interrupt Request Handler */
 void BTN_IRQHandler(void);
