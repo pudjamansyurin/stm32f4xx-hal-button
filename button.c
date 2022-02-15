@@ -27,7 +27,6 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
                            uint16_t pin,
                            void (*cb)(void))
 {
-  GPIO_InitTypeDef GPIO_InitStruct;
   IRQn_Type IRQn;
 
   /* Check the structure handle allocation */
@@ -49,16 +48,16 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
   /* Configure the GPIO pin */
   if (cb == NULL) {
     /* Configure Button pin as normal input */
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+    btn->init.Mode = GPIO_MODE_INPUT;
+    btn->init.Pull = GPIO_PULLDOWN;
+    btn->init.Speed = GPIO_SPEED_FAST;
   } else {
     /* Configure Button pin as input with External interrupt */
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    btn->init.Pull = GPIO_NOPULL;
+    btn->init.Mode = GPIO_MODE_IT_FALLING;
   }
-  GPIO_InitStruct.Pin = btn->pin;
-  HAL_GPIO_Init(btn->port, &GPIO_InitStruct);
+  btn->init.Pin = btn->pin;
+  HAL_GPIO_Init(btn->port, &btn->init);
 
   /* Enable Interrupt in EXTI mode */
   if (cb != NULL) {
@@ -77,12 +76,11 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
 
 /**
  * @brief DeInit Buttons.
- * @note It is optional for disable the GPIO clock
+ * @note The clock port is not disabled by default
  * @param btn Pointer to Button handle
- * @param disable Disable the port clock
  * @return HAL Status
  */
-HAL_StatusTypeDef BTN_DeInit(struct Button *btn, uint8_t disable)
+HAL_StatusTypeDef BTN_DeInit(struct Button *btn)
 {
   __HAL_LOCK(btn);
 
@@ -96,42 +94,43 @@ HAL_StatusTypeDef BTN_DeInit(struct Button *btn, uint8_t disable)
   /* DeInit the GPIO pin */
   HAL_GPIO_DeInit(btn->port, btn->pin);
 
-  /* Disable clock */
-  if (disable) {
-    CMN_PortDisableClock(btn->port);
-  }
-
   __HAL_UNLOCK(btn);
   return (HAL_OK);
 }
 
 /**
  * @brief Configure button suspend mode
+ * @note The clock port is not disabled by default
  * @param btn Pointer to Button handle
- * @param on Suspend state
+ * @param suspend Suspend state
  * @return HAL Status
  */
-HAL_StatusTypeDef BTN_Suspend(struct Button *btn, uint8_t on)
+HAL_StatusTypeDef BTN_Suspend(struct Button *btn, uint8_t suspend)
 {
   IRQn_Type irq;
 
   __HAL_LOCK(btn);
 
+  /* Enable clock only when activation */
+  if (!suspend) {
+    CMN_PortEnableClock(btn->port);
+  }
+
   /* Modify interrupt pin */
   if (Listeners[btn->pin] != NULL) {
     irq = CMN_PinGetIrqNumber(btn->pin);
-    if (on) {
+    if (suspend) {
       HAL_NVIC_DisableIRQ(irq);
     } else {
       HAL_NVIC_EnableIRQ(irq);
     }
   }
 
-  /* Modify clock */
-  if (on) {
-    CMN_PortDisableClock(btn->port);
+  /* Modify GPIO & clock */
+  if (suspend) {
+    HAL_GPIO_DeInit(btn->port, btn->pin);
   } else {
-    CMN_PortEnableClock(btn->port);
+    HAL_GPIO_Init(btn->port, &btn->init);
   }
 
   __HAL_UNLOCK(btn);

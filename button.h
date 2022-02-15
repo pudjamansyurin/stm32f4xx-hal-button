@@ -16,6 +16,7 @@
 /* Public types */
 struct Button {
   GPIO_TypeDef *port;
+  GPIO_InitTypeDef init;
   uint16_t pin;
   HAL_LockTypeDef Lock;
   void (*callback)(struct Button*);
@@ -26,8 +27,8 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
                            GPIO_TypeDef *port,
                            uint16_t pin,
                            void (*cb)(void));
-HAL_StatusTypeDef BTN_DeInit(struct Button *btn, uint8_t disable);
-HAL_StatusTypeDef BTN_Suspend(struct Button *btn, uint8_t on);
+HAL_StatusTypeDef BTN_DeInit(struct Button *btn);
+HAL_StatusTypeDef BTN_Suspend(struct Button *btn, uint8_t suspend);
 GPIO_PinState BTN_GetState(struct Button *btn);
 
 /* Interrupt Request Handler */
