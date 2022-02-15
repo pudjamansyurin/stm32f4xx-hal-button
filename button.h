@@ -10,22 +10,18 @@
 
 #include "stm32f4xx_hal.h"
 
-/* Public macros */
-#define DELAY_MS(__X__)        HAL_Delay(__X__)
-
 /* Public types */
 struct Button {
   GPIO_TypeDef *port;
   GPIO_InitTypeDef init;
-  uint16_t pin;
+  uint8_t pin_num;
   HAL_LockTypeDef Lock;
-  void (*callback)(struct Button*);
 };
 
 /* Public function declarations */
 HAL_StatusTypeDef BTN_Init(struct Button *btn,
                            GPIO_TypeDef *port,
-                           uint16_t pin,
+                           uint8_t pin_num,
                            void (*cb)(void));
 HAL_StatusTypeDef BTN_DeInit(struct Button *btn);
 HAL_StatusTypeDef BTN_Suspend(struct Button *btn, uint8_t suspend);

@@ -17,10 +17,10 @@ int main(void)
   struct ButtonStruct hbtn2;
   
   /* Initialize the Button for port A5 as Normal mode */
-  BTN_Init(&hbtn1, GPIOA, GPIO_PIN_5, NULL);
+  BTN_Init(&hbtn1, GPIOA, 5, NULL);
   
   /* Initialize the Button for port C13 as EXTI mode */
-  BTN_Init(&hbtn2, GPIOC, GPIO_PIN_13, ButtonCallback);
+  BTN_Init(&hbtn2, GPIOC, 13, ButtonCallback);
   
   /* Super loop */
   while(1) {
