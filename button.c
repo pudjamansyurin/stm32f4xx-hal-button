@@ -8,7 +8,7 @@
 #include "stm32f4xx-hal-common/common.h"
 
 /* Private variables */
-static void (*Listeners[GPIO_PIN_CNT])(void) = {NULL };
+static void (*Listeners[GPIO_PIN_CNT])(void) = {NULL};
 
 /* Public function definitions */
 /**
@@ -30,16 +30,15 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
   /* Check the structure handle allocation */
   if (btn == NULL)
     return HAL_ERROR;
-  if (pin_num >= GPIO_PIN_CNT) {
+  if (pin_num >= GPIO_PIN_CNT)
     return HAL_ERROR;
-  }
 
   /* Check the parameters */
   assert_param(IS_GPIO_ALL_INSTANCE(port));
   assert_param(IS_GPIO_PIN(GPIO_PIN(pin_num)));
 
   /* Initialize properties */
-  btn->Lock = HAL_UNLOCKED;
+  __HAL_UNLOCK(btn);
   btn->port = port;
   btn->pin_num = pin_num;
 
@@ -47,12 +46,15 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
   CMN_PortEnableClock(port);
 
   /* Configure the GPIO pin */
-  if (cb == NULL) {
+  if (cb == NULL)
+  {
     /* Configure Button pin as normal input */
     btn->init.Mode = GPIO_MODE_INPUT;
     btn->init.Pull = GPIO_PULLDOWN;
     btn->init.Speed = GPIO_SPEED_FAST;
-  } else {
+  }
+  else
+  {
     /* Configure Button pin as input with External interrupt */
     btn->init.Pull = GPIO_NOPULL;
     btn->init.Mode = GPIO_MODE_IT_FALLING;
@@ -61,8 +63,10 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
   HAL_GPIO_Init(btn->port, &btn->init);
 
   /* Enable Interrupt in EXTI mode */
-  if (cb != NULL) {
-    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK) {
+  if (cb != NULL)
+  {
+    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
+    {
       /* Enable and set Button EXTI Interrupt to the lowest priority */
       HAL_NVIC_SetPriority(IRQn, 0x0F, 0x0F);
       HAL_NVIC_EnableIRQ(IRQn);
@@ -87,11 +91,12 @@ HAL_StatusTypeDef BTN_DeInit(struct Button *btn)
 
   __HAL_LOCK(btn);
 
-  if (Listeners[btn->pin_num] != NULL) {
+  if (Listeners[btn->pin_num] != NULL)
+  {
     /* Disable interrupt pin */
-    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK) {
+    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
       HAL_NVIC_DisableIRQ(IRQn);
-    }
+
     /* Remove current handle from slot */
     Listeners[btn->pin_num] = NULL;
   }
@@ -117,21 +122,25 @@ HAL_StatusTypeDef BTN_Suspend(struct Button *btn, FunctionalState suspend)
   __HAL_LOCK(btn);
 
   /* Modify interrupt pin */
-  if (Listeners[btn->pin_num] != NULL) {
-    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK) {
-      if (suspend) {
+  if (Listeners[btn->pin_num] != NULL)
+  {
+    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
+    {
+      if (suspend)
         HAL_NVIC_DisableIRQ(IRQn);
-      } else {
+      else
         HAL_NVIC_EnableIRQ(IRQn);
-      }
     }
   }
 
   /* Modify GPIO & clock */
-  if (suspend) {
+  if (suspend)
+  {
     HAL_GPIO_DeInit(btn->port, GPIO_PIN(btn->pin_num));
     CMN_PortDisableClock(btn->port);
-  } else {
+  }
+  else
+  {
     CMN_PortEnableClock(btn->port);
     HAL_GPIO_Init(btn->port, &btn->init);
   }
@@ -157,10 +166,10 @@ void BTN_IRQHandler(void)
 {
   uint8_t pin_num;
 
-  for (pin_num = 0; pin_num < GPIO_PIN_CNT; pin_num++) {
-    if (Listeners[pin_num] != NULL) {
+  for (pin_num = 0; pin_num < GPIO_PIN_CNT; pin_num++)
+  {
+    if (Listeners[pin_num] != NULL)
       HAL_GPIO_EXTI_IRQHandler(GPIO_PIN(pin_num));
-    }
   }
 }
 
@@ -174,13 +183,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   uint8_t pin_num;
 
   /* Get pin number */
-  if (CMN_PinGetNumber(&pin_num, GPIO_Pin) != HAL_OK) {
+  if (CMN_PinGetNumber(&pin_num, GPIO_Pin) != HAL_OK)
     return;
-  }
 
   /* Get the listener */
   Listener = Listeners[pin_num];
-  if (Listener != NULL) {
+  if (Listener != NULL)
     Listener();
-  }
 }
