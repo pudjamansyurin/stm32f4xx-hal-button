@@ -24,7 +24,7 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
                            uint8_t pin_num,
                            void (*cb)(void));
 HAL_StatusTypeDef BTN_DeInit(struct Button *btn);
-HAL_StatusTypeDef BTN_Suspend(struct Button *btn, uint8_t suspend);
+HAL_StatusTypeDef BTN_Suspend(struct Button *btn, FunctionalState suspend);
 GPIO_PinState BTN_GetState(struct Button *btn);
 
 /* Interrupt Request Handler */
