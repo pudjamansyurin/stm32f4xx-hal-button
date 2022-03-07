@@ -5,7 +5,7 @@
  *      Author: pudja
  */
 #include "./button.h"
-#include "stm32f4xx-hal-common/common.h"
+#include "stm32f4xx-hal-util/util.h"
 
 /* Private variables */
 static void (*Listeners[GPIO_PIN_CNT])(void) = {NULL};
@@ -43,7 +43,7 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
   btn->pin_num = pin_num;
 
   /* Enable the GPIO Clock */
-  CMN_PortEnableClock(port);
+  UTIL_PortEnableClock(port);
 
   /* Configure the GPIO pin */
   if (cb == NULL)
@@ -65,7 +65,7 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
   /* Enable Interrupt in EXTI mode */
   if (cb != NULL)
   {
-    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
+    if (UTIL_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
     {
       /* Enable and set Button EXTI Interrupt to the lowest priority */
       HAL_NVIC_SetPriority(IRQn, 0x0F, 0x0F);
@@ -94,7 +94,7 @@ HAL_StatusTypeDef BTN_DeInit(struct Button *btn)
   if (Listeners[btn->pin_num] != NULL)
   {
     /* Disable interrupt pin */
-    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
+    if (UTIL_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
       HAL_NVIC_DisableIRQ(IRQn);
 
     /* Remove current handle from slot */
@@ -124,7 +124,7 @@ HAL_StatusTypeDef BTN_Suspend(struct Button *btn, FunctionalState suspend)
   /* Modify interrupt pin */
   if (Listeners[btn->pin_num] != NULL)
   {
-    if (CMN_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
+    if (UTIL_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
     {
       if (suspend)
         HAL_NVIC_DisableIRQ(IRQn);
@@ -137,11 +137,11 @@ HAL_StatusTypeDef BTN_Suspend(struct Button *btn, FunctionalState suspend)
   if (suspend)
   {
     HAL_GPIO_DeInit(btn->port, GPIO_PIN(btn->pin_num));
-    CMN_PortDisableClock(btn->port);
+    UTIL_PortDisableClock(btn->port);
   }
   else
   {
-    CMN_PortEnableClock(btn->port);
+    UTIL_PortEnableClock(btn->port);
     HAL_GPIO_Init(btn->port, &btn->init);
   }
 
@@ -183,7 +183,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   uint8_t pin_num;
 
   /* Get pin number */
-  if (CMN_PinGetNumber(&pin_num, GPIO_Pin) != HAL_OK)
+  if (UTIL_PinGetNumber(&pin_num, GPIO_Pin) != HAL_OK)
     return;
 
   /* Get the listener */

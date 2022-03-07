@@ -56,11 +56,3 @@ void EXTI15_10_IRQHandler(void)
 }
 /* USER CODE END 1 */
 ```
-
-#### **`stm32f4xx_it.h`**
-
-```c
-/* USER CODE BEGIN EFP */
-void EXTI15_10_IRQHandler(void);
-/* USER CODE END EFP */
-```
