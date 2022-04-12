@@ -14,8 +14,8 @@ static void ButtonCallback(void)
 
 int main(void)
 {
-  struct ButtonStruct hbtn1;
-  struct ButtonStruct hbtn2;
+  struct Button hbtn1;
+  struct Button hbtn2;
 
   /* Initialize the Button for port A5 as Normal mode */
   BTN_Init(&hbtn1, GPIOA, 5, NULL);
