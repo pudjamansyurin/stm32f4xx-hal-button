@@ -1,3 +1,0 @@
-[submodule "stm32f4xx-hal-util"]
-	path = stm32f4xx-hal-util
-	url = git@github.com:pudjamansyurin/stm32f4xx-hal-util.git
