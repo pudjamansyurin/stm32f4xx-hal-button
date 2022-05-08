@@ -7,21 +7,21 @@
 ```c
 #include "stm32f4xx-hal-button/button.h"
 
-static void ButtonCallback(void)
+struct Button hbtn1;
+struct Button hbtn2;
+
+static void Button2_Callback(void)
 {
   /* Button2 was pressed */
 }
 
 int main(void)
 {
-  struct Button hbtn1;
-  struct Button hbtn2;
-
   /* Initialize the Button for port A5 as Normal mode */
   BTN_Init(&hbtn1, GPIOA, 5, NULL);
 
   /* Initialize the Button for port C13 as EXTI mode */
-  BTN_Init(&hbtn2, GPIOC, 13, ButtonCallback);
+  BTN_Init(&hbtn2, GPIOC, 13, Button2_Callback);
 
   /* Super loop */
   while(1) {
@@ -35,7 +35,7 @@ int main(void)
 
   /* DeInit the Buttons */
   BTN_DeInit(&hbtn1);
-  BTN_DeInit(&hbtn2;
+  BTN_DeInit(&hbtn2);
 }
 ```
 
@@ -47,12 +47,14 @@ int main(void)
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN 1 */
+extern struct Button hbtn2;
+
 /**
   * @brief This function handles EXTI line[15:10] interrupts.
   */
 void EXTI15_10_IRQHandler(void)
 {
-  BTN_IRQHandler();
+  BTN_IRQHandler(&hbtn2);
 }
 /* USER CODE END 1 */
 ```

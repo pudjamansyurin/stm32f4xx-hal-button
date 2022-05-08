@@ -7,13 +7,14 @@
 #include "./button.h"
 
 /* Private macros */
-#define GPIO_PIN_CNT            (16)
-#define GPIO_PIN(__X__)         (1 << (__X__))
-#define DELAY_MS(__X__)         (HAL_Delay(__X__))
+#define DELAY_MS(__X__)             (HAL_Delay(__X__))
+#define GPIO_PIN_CNT                (16)
+#define GPIO_PIN(__X__)             (1 << (__X__))
+#define GPIO_MASK(__X__)            (((__X__) - GPIOA) / (GPIOB-GPIOA) + 1)
+#define RCC_AHB1ENR_GPIOXEN(__X__)  (GPIO_PIN(GPIO_MASK(__X__)))
 
 /* Private variables */
-static void (*Listeners[GPIO_PIN_CNT])(void) =
-{ NULL };
+static void (*Listeners[GPIO_PIN_CNT])(void);
 
 /* Private function declarations */
 static HAL_StatusTypeDef UTIL_PinGetNumber(uint8_t *pin_num, uint16_t GPIO_Pin);
@@ -172,16 +173,11 @@ GPIO_PinState BTN_GetState(struct Button *btn)
 
 /**
  * @brief It should be called on all HAL EXTI IRQ lines handler
+ * @param btn Pointer to Button handle
  */
-void BTN_IRQHandler(void)
+void BTN_IRQHandler(struct Button *btn)
 {
-  uint8_t pin_num;
-
-  for (pin_num = 0; pin_num < GPIO_PIN_CNT; pin_num++)
-  {
-    if (Listeners[pin_num] != NULL)
-      HAL_GPIO_EXTI_IRQHandler(GPIO_PIN(pin_num));
-  }
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN(btn->pin_num));
 }
 
 /**
@@ -212,10 +208,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
  */
 static HAL_StatusTypeDef UTIL_PinGetNumber(uint8_t *pin_num, uint16_t GPIO_Pin)
 {
-  uint8_t i;
-
   /* Find the pin number */
-  for (i = 0; i < GPIO_PIN_CNT; i++)
+  for (uint8_t i = 0; i < GPIO_PIN_CNT; i++)
   {
     if (GPIO_Pin >> i == 0x01)
     {
@@ -267,22 +261,11 @@ static void UTIL_PortEnableClock(GPIO_TypeDef *port)
   assert_param(IS_GPIO_ALL_INSTANCE(port));
 
   /* Enable appropriate GPIO clock */
-  if (port == GPIOH)
-    __HAL_RCC_GPIOH_CLK_ENABLE();
-  else if (port == GPIOG)
-    __HAL_RCC_GPIOG_CLK_ENABLE();
-  else if (port == GPIOF)
-    __HAL_RCC_GPIOF_CLK_ENABLE();
-  else if (port == GPIOE)
-    __HAL_RCC_GPIOE_CLK_ENABLE();
-  else if (port == GPIOD)
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-  else if (port == GPIOC)
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-  else if (port == GPIOB)
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-  else if (port == GPIOA)
-    __HAL_RCC_GPIOA_CLK_ENABLE();
+  __IO uint32_t tmpreg = 0x00U;
+  SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOXEN(port));
+  /* Delay after an RCC peripheral clock enabling */
+  tmpreg = READ_BIT(RCC->AHB1ENR, RCC_AHB1ENR_GPIOXEN(port));
+  UNUSED(tmpreg);
 }
 
 /**
@@ -294,20 +277,6 @@ static void UTIL_PortDisableClock(GPIO_TypeDef *port)
   assert_param(IS_GPIO_ALL_INSTANCE(port));
 
   /* Disable appropriate GPIO clock */
-  if (port == GPIOH)
-    __HAL_RCC_GPIOH_CLK_DISABLE();
-  else if (port == GPIOG)
-    __HAL_RCC_GPIOG_CLK_DISABLE();
-  else if (port == GPIOF)
-    __HAL_RCC_GPIOF_CLK_DISABLE();
-  else if (port == GPIOE)
-    __HAL_RCC_GPIOE_CLK_DISABLE();
-  else if (port == GPIOD)
-    __HAL_RCC_GPIOD_CLK_DISABLE();
-  else if (port == GPIOC)
-    __HAL_RCC_GPIOC_CLK_DISABLE();
-  else if (port == GPIOB)
-    __HAL_RCC_GPIOB_CLK_DISABLE();
-  else if (port == GPIOA)
-    __HAL_RCC_GPIOA_CLK_DISABLE();
+  RCC->AHB1ENR &= ~(RCC_AHB1ENR_GPIOXEN(port));
 }
+

@@ -28,7 +28,6 @@ HAL_StatusTypeDef BTN_Suspend(struct Button *btn, FunctionalState suspend);
 GPIO_PinState BTN_GetState(struct Button *btn);
 
 /* Interrupt Request Handler */
-void BTN_IRQHandler(void);
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+void BTN_IRQHandler(struct Button *btn);
 
 #endif /* INC_MODULES_BUTTON_H_ */
