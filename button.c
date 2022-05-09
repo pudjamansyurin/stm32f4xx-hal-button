@@ -67,7 +67,7 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
   else
   {
     /* Configure Button pin as input with External interrupt */
-    btn->init.Pull = GPIO_NOPULL;
+    btn->init.Pull = GPIO_PULLUP;
     btn->init.Mode = GPIO_MODE_IT_FALLING;
   }
   btn->init.Pin = GPIO_PIN(btn->pin_num);
