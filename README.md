@@ -47,14 +47,12 @@ int main(void)
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN 1 */
-extern struct Button hbtn2;
-
 /**
   * @brief This function handles EXTI line[15:10] interrupts.
   */
 void EXTI15_10_IRQHandler(void)
 {
-  BTN_IRQHandler(&hbtn2);
+  BTN_IRQHandler();
 }
 /* USER CODE END 1 */
 ```

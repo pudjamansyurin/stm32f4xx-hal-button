@@ -15,6 +15,7 @@ struct Button {
   GPIO_TypeDef *port;
   GPIO_InitTypeDef init;
   uint8_t pin_num;
+  void (*callback)(void);
   HAL_LockTypeDef Lock;
 };
 
@@ -28,6 +29,6 @@ HAL_StatusTypeDef BTN_Suspend(struct Button *btn, FunctionalState suspend);
 GPIO_PinState BTN_GetState(struct Button *btn);
 
 /* Interrupt Request Handler */
-void BTN_IRQHandler(struct Button *btn);
+void BTN_IRQHandler(void);
 
 #endif /* INC_MODULES_BUTTON_H_ */

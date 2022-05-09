@@ -14,10 +14,9 @@
 #define RCC_AHB1ENR_GPIOXEN(__X__)  (GPIO_PIN(GPIO_MASK(__X__)))
 
 /* Private variables */
-static void (*Listeners[GPIO_PIN_CNT])(void);
+static struct Button *Buttons[GPIO_PIN_CNT];
 
 /* Private function declarations */
-static HAL_StatusTypeDef UTIL_PinGetNumber(uint8_t *pin_num, uint16_t GPIO_Pin);
 static HAL_StatusTypeDef UTIL_PinGetIrqNumber(IRQn_Type *IRQn, uint8_t pin_num);
 static void UTIL_PortEnableClock(GPIO_TypeDef *port);
 static void UTIL_PortDisableClock(GPIO_TypeDef *port);
@@ -84,8 +83,10 @@ HAL_StatusTypeDef BTN_Init(struct Button *btn,
       HAL_NVIC_EnableIRQ(IRQn);
     }
 
-    /* Added callback, called when interrupt raised */
-    Listeners[btn->pin_num] = cb;
+    /* Added callback, and register */
+    btn->callback = cb;
+
+    Buttons[btn->pin_num] = btn;
   }
 
   return (HAL_OK);
@@ -103,14 +104,14 @@ HAL_StatusTypeDef BTN_DeInit(struct Button *btn)
 
   __HAL_LOCK(btn);
 
-  if (Listeners[btn->pin_num] != NULL)
+  if (Buttons[btn->pin_num] != NULL)
   {
     /* Disable interrupt pin */
     if (UTIL_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
       HAL_NVIC_DisableIRQ(IRQn);
 
     /* Remove current handle from slot */
-    Listeners[btn->pin_num] = NULL;
+    Buttons[btn->pin_num] = NULL;
   }
 
   /* DeInit the GPIO pin */
@@ -134,7 +135,7 @@ HAL_StatusTypeDef BTN_Suspend(struct Button *btn, FunctionalState suspend)
   __HAL_LOCK(btn);
 
   /* Modify interrupt pin */
-  if (Listeners[btn->pin_num] != NULL)
+  if (Buttons[btn->pin_num] != NULL)
   {
     if (UTIL_PinGetIrqNumber(&IRQn, btn->pin_num) == HAL_OK)
     {
@@ -173,54 +174,31 @@ GPIO_PinState BTN_GetState(struct Button *btn)
 
 /**
  * @brief It should be called on all HAL EXTI IRQ lines handler
- * @param btn Pointer to Button handle
  */
-void BTN_IRQHandler(struct Button *btn)
+void BTN_IRQHandler(void)
 {
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN(btn->pin_num));
-}
-
-/**
- * @brief HAL EXTI Interrupt Callback
- * @param GPIO_Pin The interrupted pin
- */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  void (*Listener)(void);
+  struct Button *btn;
+  uint16_t GPIO_Pin;
   uint8_t pin_num;
 
-  /* Get pin number */
-  if (UTIL_PinGetNumber(&pin_num, GPIO_Pin) != HAL_OK)
-    return;
+  for (pin_num = 0; pin_num < GPIO_PIN_CNT; pin_num++)
+  {
+    GPIO_Pin = GPIO_PIN(pin_num);
 
-  /* Get the listener */
-  Listener = Listeners[pin_num];
-  if (Listener != NULL)
-    Listener();
+    /* EXTI line interrupt detected */
+    if (RESET != __HAL_GPIO_EXTI_GET_IT(GPIO_Pin))
+    {
+      __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
+
+      /* Get the listener */
+      btn = Buttons[pin_num];
+      if (btn != NULL)
+        btn->callback();
+    }
+  }
 }
 
 /* Private function definitions */
-/**
- * @brief Get GPIO pin number index
- * @param pin_num Pointer to destination pin buffer
- * @param GPIO_Pin The GPIO pin
- * @return HAL Status
- */
-static HAL_StatusTypeDef UTIL_PinGetNumber(uint8_t *pin_num, uint16_t GPIO_Pin)
-{
-  /* Find the pin number */
-  for (uint8_t i = 0; i < GPIO_PIN_CNT; i++)
-  {
-    if (GPIO_Pin >> i == 0x01)
-    {
-      *pin_num = i;
-      return (HAL_OK);
-    }
-  }
-
-  return (HAL_ERROR);
-}
-
 /**
  * @brief Get related IRQ number based on GPIO pin
  * @param IRQn Pointer to destination IRQ buffer
